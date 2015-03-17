@@ -5,25 +5,7 @@
 
 VAGRANTFILE_API_VERSION = "2"
 
-def install_plugin_command(name, version=nil)
-  "vagrant plugin install #{name}#{" --plugin-version '#{version}'" if version}"
-end
 
-def plugin_installed?(name)
-  has_plugin = Vagrant.has_plugin?(name)
-  yield if block_given? && has_plugin
-  has_plugin
-end
-
-def check_for_plugin(name, version=nil)
-  unless plugin_installed?(name)
-    puts "The #{name} plugin is required. Please install it with the following command:\n\n#{install_plugin_command(name, version)}"
-    exit
-  end
-end
-
-check_for_plugin('vagrant-omnibus')
-check_for_plugin('vagrant-berkshelf', '>= 2.0.1')
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # All Vagrant configuration is done here. The most common configuration
@@ -31,90 +13,29 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "centos6.3"
+  #config.vm.box = "centos6.3"
+  config.vm.box_url = "https://s3.amazonaws.com/itmat-public/centos-6.3-chef-10.14.2.box"
+
+
+  config.vm.provision "chef_solo" do |chef|
+  #  chef.cookbooks_path ="cookbooks"
+#    chef.add_recipe "nginx"
+    chef.add_recipe "apt"  
+  chef.add_recipe "mongodb"
+    chef.log_level = 'debug'
+    chef.verbose_logging = true
+  end
+
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
   # config.vm.box_url = "http://domain.com/path/to/above.box"
- # config.vm.box_url = "https://vagrantcloud.com/ubuntu/trusty64/version/1/provider/virtualbox.box"
+  #config.vm.box_url = "https://vagrantcloud.com/ubuntu/trusty64/version/1/provider/virtualbox.box"
+  # config.vm.box_url ="https://dl.dropbox.com/u/31081437/Berkshelf-CentOS-6.3-x86_64-minimal.box"
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
-  config.vm.network :forwarded_port, guest: 80, host: 8080
+  config.vm.network :forwarded_port, guest: 80, host: 8081
 
-  # Create a public network, which generally matched to bridged network.
-  # Bridged networks make the machine appear as another physical device on
-  # your network.
-  # config.vm.network :public_network
-
-  # If true, then any SSH connections made will enable agent forwarding.
-  # Default value: false
-  # config.ssh.forward_agent = true
-
-  # Share an additional folder to the guest VM. The first argument is
-  # the path on the host to the actual folder. The second argument is
-  # the path on the guest to mount the folder. And the optional third
-  # argument is a set of non-required options.
-
-  # Provider-specific configuration so you can fine-tune various
-  # backing providers for Vagrant. These expose provider-specific options.
-  # Example for VirtualBox:
-  #
-  # config.vm.provider :virtualbox do |vb|
-  #   # Don't boot with headless mode
-  #   vb.gui = true
-  #
-  #   # Use VBoxManage to customize the VM. For example to change memory:
-  #   vb.customize ["modifyvm", :id, "--memory", "1024"]
-  # end
-
-  config.vm.provider :virtualbox do |vb|
-    # Use VBoxManage to customize the VM. For example to change memory:
-    vb.customize ["modifyvm", :id, "--memory", "2048"]
-    vb.customize ["modifyvm", :id, "--cpus", "1"]
-    vb.customize ["modifyvm", :id, "--ioapic", "on"]
-  end
-
-  # Enable provisioning with chef solo, specifying a cookbooks path, roles
-  # path, and data_bags path (all relative to this Vagrantfile), and adding
-  # some recipes and/or roles.
-
-  # Use vagrant-omnibus to manage chef version.
-  config.omnibus.chef_version = :latest if plugin_installed?('vagrant-omnibus')
-
-  # Use vagrant-berkshelf to manage cookbooks.
-  config.berkshelf.enabled = true if plugin_installed?('vagrant-berkshelf')
-
- config.vm.provision :chef_solo do |chef|
-  chef.data_bags_path = 'kitchen/data_bags'
-    chef.encrypted_data_bag_secret_key_path = '.databag_secret'
-    chef.roles_path = 'kitchen/roles'
-    chef.json = JSON.parse(Pathname(__FILE__).dirname.join('kitchen', 'nodes', 'localhost.json').read)
-    # chef.log_level = 'debug'
-    # chef.verbose_logging = true
-  end
-
-  # Enable provisioning with chef server, specifying the chef server URL,
-  # and the path to the validation key (relative to this Vagrantfile).
-  #
-  # The Opscode Platform uses HTTPS. Substitute your organization for
-  # ORGNAME in the URL and validation key.
-  #
-  # If you have your own Chef Server, use the appropriate URL, which may be
-  # HTTP instead of HTTPS depending on your configuration. Also change the
-  # validation key to validation.pem.
-  #
-  # config.vm.provision :chef_client do |chef|
-  #   chef.chef_server_url = "https://api.opscode.com/organizations/ORGNAME"
-  #   chef.validation_key_path = "ORGNAME-validator.pem"
-  # end
-  #
-  # If you're using the Opscode platform, your validator client is
-  # ORGNAME-validator, replacing ORGNAME with your organization name.
-  #
-  # If you have your own Chef Server, the default validation client name is
-  # chef-validator, unless you changed the configuration.
-  #
-  #   chef.validation_client_name = "ORGNAME-validator"
 end
