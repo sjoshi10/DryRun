@@ -1,4 +1,4 @@
-#test1##### -*- mode: ruby -*-
+#tes1##### -*- mode: ruby -*-
 # vi: set ft=ruby :
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
